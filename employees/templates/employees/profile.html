@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Pracownika{% endblock %}
+
+{% block content %}
+<h2>Twój profil</h2>
+{% if error %}
+    <p>{{ error }}</p>
+{% else %}
+    <p><strong>Imię:</strong> {{ first_name }}</p>
+    <p><strong>Nazwisko:</strong> {{ last_name }}</p>
+    <p><strong>E-mail:</strong> {{ email }}</p>
+
+{% endif %}
+{% endblock %}

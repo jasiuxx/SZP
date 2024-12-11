@@ -1,0 +1,42 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Moja Aplikacja{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<header>
+    <nav>
+        <ul>
+            <li><a href="/">Strona Główna</a></li>
+            {% if user.is_authenticated %}
+                <li><a href="{% url 'profile' %}">Mój Profil</a></li>
+                <li>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Wyloguj się</button>
+                    </form>
+
+                </li>
+            {% else %}
+                <li><a href="{% url 'login' %}">Zaloguj</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</header>
+
+<main>
+    {% block content %}
+        <h1>Witamy w Mojej Aplikacji</h1>
+    {% endblock %}
+</main>
+
+<footer>
+    <p>&copy; 2024 Moja Aplikacja. Wszelkie prawa zastrzeżone.</p>
+</footer>
+</body>
+</html>
