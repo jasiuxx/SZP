@@ -1,15 +1,37 @@
 {% extends "base.html" %}
 
-{% block title %}Profil Pracownika{% endblock %}
+{% block title %}
+    Profil Pracownika
+{% endblock %}
 
 {% block content %}
-<h2>Twój profil</h2>
-{% if error %}
-    <p>{{ error }}</p>
-{% else %}
-    <p><strong>Imię:</strong> {{ first_name }}</p>
-    <p><strong>Nazwisko:</strong> {{ last_name }}</p>
-    <p><strong>E-mail:</strong> {{ email }}</p>
-
-{% endif %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="text-center">Twój profil</h2>
+            {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% else %}
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Dane osobowe</h5>
+                        <p class="card-text"><strong>Imię:</strong> {{ first_name }}</p>
+                        <p class="card-text"><strong>Nazwisko:</strong> {{ last_name }}</p>
+                        <p class="card-text"><strong>E-mail:</strong> {{ email }}</p>
+                    </div>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <h2 class="text-center">Edytuj umiejętności</h2>
+                        <form method="post" class="mt-4 border p-4 shadow-sm rounded bg-light">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}
