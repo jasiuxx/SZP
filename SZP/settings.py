@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'account',
     'employees',
     'employers',
     'projects',
@@ -127,7 +128,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'employees.CustomUser'
+AUTH_USER_MODEL = 'account.CustomUser'
 
 LOGIN_REDIRECT_URL = '/profile/'  # lub dowolny inny URL, gdzie chcesz przekierować użytkownika
 LOGOUT_REDIRECT_URL = 'login'

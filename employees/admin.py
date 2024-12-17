@@ -1,15 +1,17 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Employee, Skill, Personality_trait
+from .models import Employee, Skill, Personality_trait
 
-class CustomUserAdmin(UserAdmin):
-    model = CustomUser
-    list_display = ['username', 'is_employee', 'is_employer', 'is_staff']
-    fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('is_employee', 'is_employer')}),
-    )
+@admin.register(Employee)
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ['user', 'display_skills', 'display_personality_traits']
 
-admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(Employee)
+    def display_skills(self, obj):
+        return ", ".join(skill.name for skill in obj.skills.all())
+    display_skills.short_description = 'Skills'
+
+    def display_personality_traits(self, obj):
+        return ", ".join(trait.name for trait in obj.personality_traits.all())
+    display_personality_traits.short_description = 'Personality Traits'
+
 admin.site.register(Skill)
 admin.site.register(Personality_trait)
