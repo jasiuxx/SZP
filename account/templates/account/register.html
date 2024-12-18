@@ -1,20 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}
-    Rejestracja
-{% endblock %}
+{% block title %}Rejestracja{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h2 class="text-center">Zarejestruj się</h2>
-        <form method="post" class="mt-4 border p-4 shadow-sm rounded bg-light">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <div class="d-grid">
-                <button type="submit" class="btn btn-success btn-block">Zarejestruj</button>
-            </div>
-        </form>
-    </div>
+<div class="container mt-5">
+    <h2>Rejestracja</h2>
+    <form method="post" id="registration-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Zarejestruj się</button>
+    </form>
 </div>
+
+<script>
+    const employerCheckbox = document.querySelector('#id_is_employer');
+    const verificationField = document.querySelector('#id_verification_code').parentElement;
+
+    function toggleVerificationField() {
+        if (employerCheckbox.checked) {
+            verificationField.style.display = 'block';
+        } else {
+            verificationField.style.display = 'none';
+        }
+    }
+
+    employerCheckbox.addEventListener('change', toggleVerificationField);
+    toggleVerificationField();  // Ukryj pole przy pierwszym załadowaniu
+</script>
 {% endblock %}
