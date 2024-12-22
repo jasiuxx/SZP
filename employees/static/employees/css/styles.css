@@ -1,0 +1,18 @@
+/* Stylizacja nagłówków */
+.card-header {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Stylizacja pól formularza */
+.form-control {
+    height: auto;
+    padding: 10px;
+    font-size: 16px;
+}
+
+/* Stylizacja przycisku */
+.btn-lg {
+    padding: 12px 20px;
+    font-size: 18px;
+}

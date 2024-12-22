@@ -11,6 +11,7 @@
             {% if error %}
                 <div class="alert alert-danger">{{ error }}</div>
             {% else %}
+                <!-- Dane osobowe -->
                 <div class="card mt-4">
                     <div class="card-body">
                         <h5 class="card-title">Dane osobowe</h5>
@@ -19,7 +20,21 @@
                         <p class="card-text"><strong>E-mail:</strong> {{ email }}</p>
                     </div>
                 </div>
-                <div class="row justify-content-center">
+
+                <!-- Karta Belbin -->
+                <div class="card mt-4">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Test Belbina</h5>
+                        <p class="card-text">Zarządzaj swoim testem Belbina.</p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{% url 'belbin_test' %}" class="btn btn-primary">Wykonaj test</a>
+                            <a href="{% url 'belbin_results' %}" class="btn btn-secondary">Twoje wyniki</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formularz edycji umiejętności -->
+                <div class="row justify-content-center mt-4">
                     <div class="col-md-8">
                         <h2 class="text-center">Edytuj umiejętności</h2>
                         <form method="post" class="mt-4 border p-4 shadow-sm rounded bg-light">

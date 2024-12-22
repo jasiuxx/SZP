@@ -29,5 +29,13 @@ class VerificationCodeAdmin(admin.ModelAdmin):
 
 @admin.register(Employer)
 class EmployerAdmin(admin.ModelAdmin):
-    list_display = ("user", "is_verified")
+    list_display = ("user",'user_first_name','user_last_name', "is_verified","verification_code")
     search_fields = ("user__username",)
+
+    def user_first_name(self, obj):
+        return obj.user.first_name  # Pobiera imię z powiązanego użytkownika
+    user_first_name.short_description = 'First Name'
+
+    def user_last_name(self, obj):
+        return obj.user.last_name  # Pobiera nazwisko z powiązanego użytkownika
+    user_last_name.short_description = 'Last Name'

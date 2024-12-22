@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Wyniki Testu Belbina{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Twoje Wyniki Testu Belbina</h2>
+    {% if results %}
+        <h3>Wyniki według poziomów:</h3>
+        <ul>
+            {% for level, roles in results.roles_by_level.items %}
+                <li><strong>{{ level|capfirst }}:</strong>
+                    {% if roles %}
+                        {{ roles|join:", " }}
+                    {% else %}
+                        Brak ról na tym poziomie.
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Nie masz jeszcze wyników testu Belbina. Wypełnij test, aby zobaczyć swoje wyniki.</p>
+    {% endif %}
+</div>
+{% endblock %}
