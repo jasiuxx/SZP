@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Profil Pracodawcy</h2>
+    <p>Witaj, {{ request.user.first_name }}!</p>
+    <div class="mt-4">
+        <a href="{% url 'create_project' %}" class="btn btn-primary btn-lg">Utwórz Projekt</a>
+        <a href="{% url 'project_list' %}" class="btn btn-secondary btn-lg">Moje Projekty</a>
+    </div>
+</div>
+{% endblock %}

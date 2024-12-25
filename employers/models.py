@@ -30,7 +30,7 @@ class Employer(models.Model):
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
-        related_name='employer_profile',
+        related_name='employer',
         null=True,
         blank=True
     )

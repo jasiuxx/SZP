@@ -1,27 +1,53 @@
 {% extends "base.html" %}
+{% load form_filters %}
 
 {% block title %}Test Belbina{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
+    <!-- Outer card for the entire form -->
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white text-center">
-            <h2>Test Belbina</h2>
-            <p>W każdej sekcji rozdziel dokładnie 10 punktów między odpowiedzi.</p>
+        <div class="card-header bg-primary text-white text-center py-4">
+            <h2 class="mb-0">Test Belbina</h2>
+            <p class="mt-2">W każdej sekcji rozdziel dokładnie 10 punktów między odpowiedzi.</p>
         </div>
         <div class="card-body">
-            <form method="post">
+            <!-- Formularz -->
+            <form method="post" class="needs-validation" novalidate>
                 {% csrf_token %}
-                {% for field in form %}
-                    <!-- Pytanie -->
-                    <div class="mb-4">
-                        <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="text-danger mt-1">{{ field.errors }}</div>
-                        {% endif %}
+
+                <!-- Wyświetlanie błędów globalnych -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors|join:", " }}
                     </div>
+                {% endif %}
+
+                <!-- Iteracja przez pola formularza -->
+                {% for field in form %}
+                    {% if "name" in field.name %}
+                        <!-- Card for each section -->
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h3 class="card-title text-black">{{ field.initial }}</h3>
+                                <hr style="border: 1px solid black;">  <!-- Horizontal rule with black color -->
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-bold">
+                                {{ field.label }}
+                            </label>
+                            {{ field|add_class:"form-control" }}
+                            {% if field.errors %}
+                                <div class="text-danger mt-1 small">
+                                    {{ field.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 {% endfor %}
+
                 <!-- Przycisk zapisu -->
                 <div class="d-grid mt-4">
                     <button type="submit" class="btn btn-success btn-lg">Zapisz odpowiedzi</button>
@@ -30,4 +56,21 @@
         </div>
     </div>
 </div>
+
+<script>
+// Dodanie walidacji formularza
+(function () {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+})();
+</script>
 {% endblock %}

@@ -1,18 +1,52 @@
-/* Stylizacja nagłówków */
-.card-header {
-    font-size: 1.5rem;
+/* Ogólny styl dla formularza */
+.container {
+    max-width: 800px;
+    margin: auto;
+}
+
+/* Stylizacja sekcji */
+.section-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Nagłówek sekcji */
+.section-header {
+    background-color: #6c757d; /* Kolor tła */
+    color: #fff; /* Kolor tekstu */
+    font-size: 1.25rem;
     font-weight: bold;
 }
 
-/* Stylizacja pól formularza */
-.form-control {
-    height: auto;
-    padding: 10px;
-    font-size: 16px;
+/* Treść sekcji */
+.section-body {
+    background-color: #f8f9fa; /* Jasne tło dla kontrastu */
+    padding: 16px;
 }
 
-/* Stylizacja przycisku */
-.btn-lg {
-    padding: 12px 20px;
-    font-size: 18px;
+/* Pytania */
+.question-item label {
+    font-weight: bold;
+    color: #333;
+}
+
+.question-item input {
+    width: 100%;
+    padding: 8px;
+    font-size: 1rem;
+}
+
+/* Stopka sekcji */
+.section-footer {
+    background-color: #6c757d; /* Dopasowanie do nagłówka */
+    color: #fff;
+    text-align: center;
+}
+
+/* Przycisk zapisu */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
 }

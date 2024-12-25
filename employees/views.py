@@ -159,8 +159,15 @@ class EmployeeBelbinTest(View):
 
     @method_decorator(login_required)
     def get(self, request):
-        form = GroupedTableForm(grouped_questions=self.questions)
-        #print("Pytania przekazane do formularza:", self.questions)  # Debugowanie
+        # Przygotowanie danych początkowych
+        initial_data = {}
+        for group_idx, group in enumerate(self.questions, start=1):
+            for question_idx in range(1, len(group['questions']) + 1):
+                field_name = f"group_{group_idx}_question_{question_idx}"
+                initial_data[field_name] = 0  # Ustawienie domyślnej wartości na 0
+
+        # Tworzenie formularza z danymi początkowymi
+        form = GroupedTableForm(grouped_questions=self.questions, initial=initial_data)
         return render(request, self.template_name, {'form': form})
 
     @method_decorator(login_required)
@@ -173,7 +180,8 @@ class EmployeeBelbinTest(View):
             # Oblicz sumy dla ról grupowych
             for item in self.answers_sum_mapping:
                 item['sum'] = sum(
-                    fields_with_values[f"group_{m[0]}_question_{m[1]}"]
+                    fields_with_values.get(f"group_{m[0]}_question_{m[1]}", 0)
+
                     for m in item['mapping']
                 )
 

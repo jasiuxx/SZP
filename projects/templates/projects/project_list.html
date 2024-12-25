@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Twoje projekty</h2>
+    <ul>
+        {% for project in projects %}
+            <li>
+                <strong>{{ project.title }}</strong> (Kod: {{ project.code }})<br>
+                Opis: {{ project.description }}<br>
+                Wymagania: {{ project.skills_required.all|join:", " }}
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'create_project' %}" class="btn btn-success">Utwórz nowy projekt</a>
+{% endblock %}

@@ -3,11 +3,11 @@ from django import template
 register = template.Library()
 
 @register.filter
-def add_class(field, css_class):
-    """Dodaje klasę CSS do pola formularza."""
-    return field.as_widget(attrs={"class": css_class})
+def get_dynamic_field(data, key):
+    """ Pobiera dynamicznie pole z form.data """
+    return data.get(key, None)
 
-@register.filter
+
 def endswith(value, suffix):
     """Sprawdza, czy wartość kończy się na określony sufiks."""
     if isinstance(value, str):

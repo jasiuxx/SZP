@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Test Belbina{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white text-center">
+            <h2>Test Belbina</h2>
+            <p>W każdej sekcji rozdziel dokładnie 10 punktów między odpowiedzi.</p>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <!-- Pytanie -->
+                    <div class="mb-4">
+                        <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger mt-1">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <!-- Przycisk zapisu -->
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-success btn-lg">Zapisz odpowiedzi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
