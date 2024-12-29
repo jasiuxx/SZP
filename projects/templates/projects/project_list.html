@@ -7,7 +7,16 @@
             <li>
                 <strong>{{ project.title }}</strong> (Kod: {{ project.code }})<br>
                 Opis: {{ project.description }}<br>
-                Wymagania: {{ project.skills_required.all|join:", " }}
+                <strong>Wymagania:</strong><br>
+                <ul>
+                    {% for skill_requirement in project.skill_requirements.all %}
+                        <li>
+                            {{ skill_requirement.skill.name }}: {{ skill_requirement.required_count }} specjalistów
+                        </li>
+                    {% empty %}
+                        Brak wymaganych umiejętności.
+                    {% endfor %}
+                </ul>
             </li>
         {% endfor %}
     </ul>

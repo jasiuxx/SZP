@@ -1,10 +1,46 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>Utwórz nowy projekt</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Zapisz</button>
-    </form>
+<h2>Utwórz nowy projekt</h2>
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        {{ form.title.label_tag }} {{ form.title }}
+    </div>
+    <div class="mb-3">
+        {{ form.code.label_tag }} {{ form.code }}
+    </div>
+    <div class="mb-3">
+        {{ form.description.label_tag }} {{ form.description }}
+    </div>
+
+    <h4>Wymagane umiejętności</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Umiejętność</th>
+                <th>Liczba specjalistów</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for skill in skills %}
+            <tr>
+                <td>{{ skill.name }}</td>
+                <td>
+                    <input
+                        type="number"
+                        value="0"
+                        name="required_count_{{ skill.id }}"
+                        min="0"
+                        class="form-control"
+                        placeholder="Liczba specjalistów"
+                    >
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Zapisz</button>
+</form>
 {% endblock %}
