@@ -3,29 +3,51 @@
 {% block content %}
 <h2>Edytuj projekt</h2>
 
-<!-- Wyświetlanie błędów walidacji formularza -->
+<!-- Globalne błędy formularza -->
 {% if form.errors %}
     <div class="alert alert-danger">
-        <ul>
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
+        {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+                <p>{{ error }}</p>
             {% endfor %}
-        </ul>
+        {% endfor %}
     </div>
 {% endif %}
 
 <form method="post">
     {% csrf_token %}
     <div class="mb-3">
-        {{ form.title.label_tag }} {{ form.title }}
+        {{ form.title.label_tag }}
+        {{ form.title }}
+        {% if form.title.errors %}
+            <div class="text-danger">
+                {% for error in form.title.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
     <div class="mb-3">
-        {{ form.code.label_tag }} {{ form.code }}
+        {{ form.code.label_tag }}
+        {{ form.code }}
+        {% if form.code.errors %}
+            <div class="text-danger">
+                {% for error in form.code.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
     <div class="mb-3">
-        {{ form.description.label_tag }} {{ form.description }}
+        {{ form.description.label_tag }}
+        {{ form.description }}
+        {% if form.description.errors %}
+            <div class="text-danger">
+                {% for error in form.description.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 
     <h4>Wymagane umiejętności</h4>

@@ -1,24 +1,84 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>Twoje projekty</h2>
-    <ul>
-        {% for project in projects %}
-            <li>
-                <strong>{{ project.title }}</strong> (Kod: {{ project.code }})<br>
-                Opis: {{ project.description }}<br>
-                <strong>Wymagania:</strong><br>
-                <ul>
-                    {% for skill_requirement in project.skill_requirements.all %}
-                        <li>
-                            {{ skill_requirement.skill.name }}: {{ skill_requirement.required_count }} specjalistów
-                        </li>
-                    {% empty %}
-                        Brak wymaganych umiejętności.
-                    {% endfor %}
-                </ul>
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'create_project' %}" class="btn btn-success">Utwórz nowy projekt</a>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Twoje projekty</h2>
+        </div>
+        <div class="col text-end">
+            <a href="{% url 'create_project' %}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Utwórz nowy projekt
+            </a>
+        </div>
+    </div>
+
+    {% if projects %}
+        <div class="row">
+            {% for project in projects %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">{{ project.title }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Kod projektu:</strong> {{ project.code }}</p>
+                            <p><strong>Opis:</strong> {{ project.description }}</p>
+
+                            <h6>Wymagane umiejętności:</h6>
+                            <ul class="list-group list-group-flush mb-3">
+                                {% for requirement in project.skill_requirements.all %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ requirement.skill.name }}
+                                        <span class="badge bg-primary rounded-pill">
+                                            {{ requirement.required_count }} specjalistów
+                                        </span>
+                                    </li>
+                                {% empty %}
+                                    <li class="list-group-item">Brak wymagań</li>
+                                {% endfor %}
+                            </ul>
+
+                            <h6>Przypisani pracownicy:</h6>
+                            <ul class="list-group list-group-flush">
+                                {% for employee in project.employees.all %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ employee.user.first_name }} {{ employee.user.last_name }}
+                                        {% for assignment in employee.employeeprojectassignment_set.all %}
+                                            {% if assignment.project.id == project.id %}
+                                                <span class="badge bg-secondary rounded-pill">
+                                                    {{ assignment.skill.name }}
+                                                </span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </li>
+                                {% empty %}
+                                    <li class="list-group-item">Brak przypisanych pracowników</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'edit_project' project.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edytuj
+                                </a>
+                                <form method="post" action="{% url 'delete_project' project.id %}" class="d-inline" onsubmit="return confirm('Czy na pewno chcesz usunąć ten projekt?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Usuń
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            Nie masz jeszcze żadnych projektów.
+            <a href="{% url 'create_project' %}" class="alert-link">Utwórz pierwszy projekt</a>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

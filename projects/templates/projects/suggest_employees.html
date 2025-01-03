@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Sugerowani pracownicy</h2>
+<ul>
+    {% for employee in suggested_employees %}
+        <li>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ employee.first_name }} {{ employee.last_name }}</h5>
+                    <p class="card-text"><strong>Umiejętność:</strong> {{ employee.skill }}</p>
+                    <p class="card-text"><strong>E-mail:</strong> {{ employee.email }}</p>
+                </div>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+
+
+<h3>Podsumowanie wymagań</h3>
+<ul>
+    {% for skill, required_count in skills_required %}
+        <li>
+            <strong>{{ skill.name }}</strong>: {{ required_count }} specjalistów
+        </li>
+    {% endfor %}
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" name="save_project" class="btn btn-primary">Zapisz projekt</button>
+</form>
+{% endblock %}
