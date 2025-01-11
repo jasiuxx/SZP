@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from employees.models import Employee
+from employees.models import Employee, BelbinScore
 from .forms import GroupedTableForm
 
 
@@ -172,58 +172,92 @@ class EmployeeBelbinTest(View):
 
     @method_decorator(login_required)
     def post(self, request):
+        """
+        Obsługuje zapis danych z formularza (punktów), oblicza wynik Belbina i zapisuje:
+         1. JSON w polu employee.belbin_test_result (mapowanie poziomów),
+         2. Szczegółowe punktacje w modelu BelbinScore (osobna tabela).
+        """
         form = GroupedTableForm(request.POST, grouped_questions=self.questions)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            fields_with_values = {field_name: field_value for field_name, field_value in cleaned_data.items()}
+            fields_with_values = {
+                field_name: field_value for field_name, field_value in cleaned_data.items()
+            }
 
-            # Oblicz sumy dla ról grupowych
+            # 1. Oblicz sumy punktów dla każdej roli
             for item in self.answers_sum_mapping:
-                item['sum'] = sum(
-                    fields_with_values.get(f"group_{m[0]}_question_{m[1]}", 0)
+                role_mapping_list = item['mapping']  # np. [[1,7], [2,1], ...]
+                role_sum = 0
 
-                    for m in item['mapping']
-                )
+                # Zsumuj punkty z formularza dla danej roli
+                for group_idx, question_idx in role_mapping_list:
+                    field_key = f"group_{group_idx}_question_{question_idx}"
+                    role_sum += fields_with_values.get(field_key, 0)
 
-            # Grupowanie ról według poziomów
+                item['sum'] = role_sum
+
+            # 2. Na podstawie sum przypisz poziomy (średni, wysoki, bardzo wysoki)
             results_by_level = {
                 "bardzo wysoki": [],
                 "wysoki": [],
                 "średni": [],
-
             }
 
             for role in self.answers_sum_mapping:
                 role_name = role['name']
                 score = role['sum']
 
-                # Przypisz poziom na podstawie zakresów punktowych
+                # Przypisz poziom na podstawie zakresów
                 for level_name in ["bardzo wysoki", "wysoki", "średni"]:
-                    range_minimum = self.score_ranges[role_name][level_name][0]
-                    range_maximum = self.score_ranges[role_name][level_name][1]
-                    if range_minimum <= score <= range_maximum:
+                    range_min = self.score_ranges[role_name][level_name][0]
+                    range_max = self.score_ranges[role_name][level_name][1]
+                    if range_min <= score <= range_max:
                         results_by_level[level_name].append(role_name)
                         break
 
-            # Zapisz wyniki do modelu Employee jako JSON
+            # 3. Zapisz do modelu Employee (JSON w polu belbin_test_result)
             employee = Employee.objects.get(user=request.user)
             employee.belbin_test_result = {
-                "roles_by_level": results_by_level,
+                "roles_by_level": results_by_level
+                # Możesz dodać inne klucze, np. "scores" itp.
             }
             employee.save()
 
-            return redirect('belbin_results')  # Przekierowanie na stronę wyników
+            # 4. (Opcjonalnie) skasuj stare wpisy w BelbinScore, by mieć zawsze aktualne
+            employee.belbin_scores.all().delete()
 
+            # 5. Utwórz nowe rekordy w tabeli BelbinScore (punktacja szczegółowa)
+            for item in self.answers_sum_mapping:
+                print(f"[DEBUG] Rola: {item['name']} finalny sum: {item['sum']}")
+                role_name = item['name']  # np. 'PO', 'NL', ...
+                role_score = item['sum']
+                BelbinScore.objects.create(
+                    employee=employee,
+                    role_name=role_name,
+                    score=role_score
+                )
+
+            # 6. Przekieruj do wyników testu
+            return redirect('belbin_results')
+
+        # Jeśli formularz nie jest poprawny, wyświetl go ponownie z błędami
         return render(request, self.template_name, {'form': form})
 
 
 @login_required
 def belbin_results_view(request):
     try:
-        # Pobierz wyniki testu dla zalogowanego użytkownika
         employee = Employee.objects.get(user=request.user)
-        results = employee.belbin_test_result  # Wyniki zapisane w modelu (JSON)
+        results = employee.belbin_test_result
+
+        # Pobieramy wszystkie rekordy z BelbinScore
+        scores = employee.belbin_scores.all().order_by('-score')  # np. sortowanie malejąco po punktach
     except Employee.DoesNotExist:
         results = None
+        scores = []
 
-    return render(request, 'employees/belbin_results.html', {'results': results})
+    return render(request, 'employees/belbin_results.html', {
+        'results': results,
+        'scores': scores,
+    })
+

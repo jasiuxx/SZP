@@ -15,7 +15,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
     login_url = '/login/'
     redirect_field_name = 'next'
 
-    def get(self, request):
+    def get(pythf, request):
         if not request.user.is_employer:
             return redirect('profile')
 
@@ -187,66 +187,6 @@ def project_list(request):
     return render(request, 'projects/project_list.html', {'projects': projects})
 
 
-class ProjectEditView(LoginRequiredMixin, View):
-    login_url = '/login/'
-    redirect_field_name = 'next'
-
-    def dispatch(self, request, project_id, *args, **kwargs):
-        self.project = get_object_or_404(
-            Project,
-            id=project_id,
-            owner=request.user.employer
-        )
-        return super().dispatch(request, project_id, *args, **kwargs)
-
-    def get(self, request, project_id):
-        # Dodaj current_project do formularza
-        form = ProjectForm(instance=self.project, current_project=self.project)
-        skills = Skill.objects.all()
-        skill_requirements = {
-            req.skill: req.required_count
-            for req in self.project.skill_requirements.all()
-        }
-
-        return render(request, 'projects/edit_project.html', {
-            'form': form,
-            'skills': skills,
-            'project': self.project,
-            'skill_requirements': skill_requirements
-        })
-
-    def post(self, request, project_id):
-        # Dodaj current_project do formularza
-        form = ProjectForm(request.POST, instance=self.project, current_project=self.project)
-        skills = Skill.objects.all()
-
-        if form.is_valid():
-            with transaction.atomic():
-                project = form.save()
-
-                # Usuń poprzednie wymagania
-                ProjectSkillRequirement.objects.filter(project=project).delete()
-
-                # Dodaj nowe wymagania
-                for skill in skills:
-                    required_count = int(request.POST.get(f'required_count_{skill.id}', 0))
-                    if required_count > 0:
-                        ProjectSkillRequirement.objects.create(
-                            project=project,
-                            skill=skill,
-                            required_count=required_count
-                        )
-
-                messages.success(request, "Projekt został zaktualizowany.")
-                return redirect('project_list')
-
-        messages.error(request, "Popraw błędy w formularzu.")
-        return render(request, 'projects/edit_project.html', {
-            'form': form,
-            'skills': skills,
-            'project': self.project
-        })
-
 class ProjectDeleteView(LoginRequiredMixin, View):
     login_url = '/login/'
     redirect_field_name = 'next'
@@ -275,46 +215,56 @@ def edit_project(request, project_id):
     project = get_object_or_404(Project, id=project_id, owner=request.user.employer)
     skills = Skill.objects.all()
 
+    # Funkcja pomocnicza do pobrania wymaganych umiejętności i przypisanych pracowników
+    def get_project_data():
+        skill_requirements = {
+            req.skill.id: req.required_count for req in project.skill_requirements.all()
+        }
+        assigned_employees = {
+            skill.id: list(project.employees.filter(skills=skill))
+            for skill in skills
+        }
+        return skill_requirements, assigned_employees
+
+    # Pobranie danych projektu
+    skill_requirements, assigned_employees = get_project_data()
+
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project, current_project=project)
 
-        # Dodaj obsługę sugerowania pracowników
+        # Obsługa sugerowania pracowników
         if 'suggest_employees' in request.POST:
-            skill_requirements = {
-                skill: int(request.POST.get(f'required_count_{skill.id}', 0))
-                for skill in skills
-                if int(request.POST.get(f'required_count_{skill.id}', 0)) > 0
-            }
-
             suggested_employees = []
-            for skill, required_count in skill_requirements.items():
-                employees = Employee.objects.filter(skills=skill)[:required_count]
-                suggested_employees.extend([
-                    {
-                        'first_name': employee.user.first_name,
-                        'last_name': employee.user.last_name,
-                        'email': employee.user.email,
-                        'skill': skill.name,
-                        'employee_id': employee.id
-                    } for employee in employees
-                ])
+            for skill in skills:
+                required_count = int(request.POST.get(f'required_count_{skill.id}', 0))
+                if required_count > 0:
+                    employees = Employee.objects.filter(skills=skill)[:required_count]
+                    suggested_employees.extend([
+                        {
+                            'first_name': employee.user.first_name,
+                            'last_name': employee.user.last_name,
+                            'email': employee.user.email,
+                            'skill': skill.name,
+                            'employee_id': employee.id
+                        } for employee in employees
+                    ])
 
             return render(request, 'projects/edit_project.html', {
                 'form': form,
                 'skills': skills,
                 'project': project,
-                'suggested_employees': suggested_employees
+                'suggested_employees': suggested_employees,
+                'skill_requirements': skill_requirements,
+                'assigned_employees': assigned_employees,
             })
 
-        # Standardowa logika zapisu projektu
+        # Obsługa zapisu zmian w projekcie
         if form.is_valid():
             with transaction.atomic():
                 project = form.save()
 
-                # Usuń poprzednie wymagania
+                # Aktualizacja wymagań dotyczących umiejętności
                 ProjectSkillRequirement.objects.filter(project=project).delete()
-
-                # Dodaj nowe wymagania
                 for skill in skills:
                     required_count = int(request.POST.get(f'required_count_{skill.id}', 0))
                     if required_count > 0:
@@ -324,10 +274,9 @@ def edit_project(request, project_id):
                             required_count=required_count
                         )
 
-                # Przypisywanie pracowników
+                # Aktualizacja przypisanych pracowników
                 project.employees.clear()
                 EmployeeProjectAssignment.objects.filter(project=project).delete()
-
                 for skill in skills:
                     employees_to_assign = request.POST.getlist(f'assign_employee_{skill.id}')
                     for employee_id in employees_to_assign:
@@ -342,17 +291,23 @@ def edit_project(request, project_id):
                 messages.success(request, "Projekt został zaktualizowany.")
                 return redirect('project_list')
 
-    # Domyślne wyświetlenie formularza
-    form = ProjectForm(instance=project, current_project=project)
-    skill_requirements = {
-        req.skill: req.required_count
-        for req in project.skill_requirements.all()
-    }
+        # Obsługa błędów formularza
+        messages.error(request, "Wystąpiły błędy w formularzu. Proszę poprawić i spróbować ponownie.")
+        return render(request, 'projects/edit_project.html', {
+            'form': form,
+            'skills': skills,
+            'project': project,
+            'skill_requirements': skill_requirements,
+            'assigned_employees': assigned_employees,
+            'errors': form.errors,
+        })
 
+    # Obsługa żądania GET
+    form = ProjectForm(instance=project, current_project=project)
     return render(request, 'projects/edit_project.html', {
         'form': form,
         'skills': skills,
         'project': project,
         'skill_requirements': skill_requirements,
-        'suggested_employees': []
+        'assigned_employees': assigned_employees,
     })

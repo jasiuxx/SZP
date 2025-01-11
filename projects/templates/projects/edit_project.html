@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load projects_filters %}
+
 {% block content %}
 <h2>Edytuj projekt</h2>
 
@@ -66,7 +68,7 @@
                 <td>
                     <input
                         type="number"
-                        value="0"
+                        value="{{ skill_requirements|get_item:skill.id|default_if_none:0 }}"
                         name="required_count_{{ skill.id }}"
                         min="0"
                         class="form-control"
@@ -75,6 +77,14 @@
                 </td>
                 <td>
                     <select name="assign_employee_{{ skill.id }}" multiple class="form-control">
+                        <!-- Aktualnie przypisani pracownicy -->
+                        {% for employee in assigned_employees|get_item:skill.id %}
+                            <option value="{{ employee.id }}" selected>
+                                {{ employee.user.first_name }} {{ employee.user.last_name }}
+                            </option>
+                        {% endfor %}
+
+                        <!-- Sugerowani pracownicy -->
                         {% for employee in suggested_employees %}
                         {% if employee.skill == skill.name %}
                         <option value="{{ employee.employee_id }}">
@@ -92,4 +102,6 @@
     <button type="submit" name="suggest_employees" class="btn btn-primary">Sugeruj pracowników</button>
     <button type="submit" class="btn btn-success">Zapisz projekt</button>
 </form>
+
+
 {% endblock %}

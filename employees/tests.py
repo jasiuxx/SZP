@@ -59,5 +59,11 @@ class BelbinTestCase(TestCase):
         print("Wynik zapisany w bazie danych:", self.employee.belbin_test_result)
 
         # Sprawdzamy wynik testu Belbina
-        expected_result = "PO*"
+        expected_result = {
+            "roles_by_level": {
+                "bardzo wysoki": ["PO"],
+                "wysoki": [],
+                "średni": []
+            }
+        }
         self.assertEqual(self.employee.belbin_test_result, expected_result)
