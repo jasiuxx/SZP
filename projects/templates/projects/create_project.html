@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load project_tags %}
 
 {% block content %}
 <h2>Edytuj projekt</h2>
@@ -44,9 +45,10 @@
                 <td>
                     <input
                         type="number"
-                        value="0"
                         name="required_count_{{ skill.id }}"
+                        id="required_count_{{ skill.id }}"
                         min="0"
+                        value="{{ skill_requirements|get_item:skill|default:'0' }}"
                         class="form-control"
                         placeholder="Liczba specjalistów"
                     >
@@ -54,12 +56,16 @@
                 <td>
                     <select name="assign_employee_{{ skill.id }}" multiple class="form-control">
                         {% for employee in suggested_employees %}
-                        {% if employee.skill == skill.name %}
-                        <option value="{{ employee.employee_id }}">
-                            {{ employee.first_name }} {{ employee.last_name }}
-                        </option>
-                        {% endif %}
+                            {% if employee.skill == skill.name %}
+                                <option value="{{ employee.employee_id }}">
+                                    {{ employee.first_name }} {{ employee.last_name }}
+                                </option>
+                            {% endif %}
                         {% endfor %}
+                        
+                        {% if 'suggest_employees' in request.POST and skill_requirements|get_item:skill > 0 and not suggested_employees|has_skill:skill.name %}
+                            <option disabled>brak</option>
+                        {% endif %}
                     </select>
                 </td>
             </tr>

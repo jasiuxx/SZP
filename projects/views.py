@@ -25,6 +25,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
             'form': form,
             'skills': skills,
             'suggested_employees': [],
+            'skill_requirements': {},
         })
 
     def post(self, request):
@@ -36,6 +37,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
 
         # Obsługa sugerowania pracowników
         if 'suggest_employees' in request.POST:
+            # Zbieramy wymagania dotyczące umiejętności
             skill_requirements = {
                 skill: int(request.POST.get(f'required_count_{skill.id}', 0))
                 for skill in skills
@@ -59,6 +61,7 @@ class ProjectCreateView(LoginRequiredMixin, View):
                 'form': form,
                 'skills': skills,
                 'suggested_employees': suggested_employees,
+                'skill_requirements': skill_requirements,  # Dodajemy skill_requirements do kontekstu
             })
 
         # Standardowa logika zapisu projektu
@@ -215,39 +218,37 @@ def edit_project(request, project_id):
     project = get_object_or_404(Project, id=project_id, owner=request.user.employer)
     skills = Skill.objects.all()
 
-    # Funkcja pomocnicza do pobrania wymaganych umiejętności i przypisanych pracowników
-    def get_project_data():
-        skill_requirements = {
-            req.skill.id: req.required_count for req in project.skill_requirements.all()
-        }
-        assigned_employees = {
-            skill.id: list(project.employees.filter(skills=skill))
-            for skill in skills
-        }
-        return skill_requirements, assigned_employees
-
-    # Pobranie danych projektu
-    skill_requirements, assigned_employees = get_project_data()
-
     if request.method == 'POST':
         form = ProjectForm(request.POST, instance=project, current_project=project)
 
         # Obsługa sugerowania pracowników
         if 'suggest_employees' in request.POST:
+            # Zbieramy aktualne wymagania dotyczące umiejętności z formularza
+            skill_requirements = {
+                skill.id: int(request.POST.get(f'required_count_{skill.id}', 0))
+                for skill in skills
+            }
+
+            # Pobierz obecnie zaznaczonych pracowników
+            selected_employees = {
+                skill.id: request.POST.getlist(f'assign_employee_{skill.id}')
+                for skill in skills
+            }
+
             suggested_employees = []
             for skill in skills:
-                required_count = int(request.POST.get(f'required_count_{skill.id}', 0))
+                required_count = skill_requirements[skill.id]
                 if required_count > 0:
                     employees = Employee.objects.filter(skills=skill)[:required_count]
-                    suggested_employees.extend([
-                        {
+                    for employee in employees:
+                        suggested_employees.append({
                             'first_name': employee.user.first_name,
                             'last_name': employee.user.last_name,
                             'email': employee.user.email,
                             'skill': skill.name,
-                            'employee_id': employee.id
-                        } for employee in employees
-                    ])
+                            'employee_id': employee.id,
+                            'selected': str(employee.id) in selected_employees.get(skill.id, [])
+                        })
 
             return render(request, 'projects/edit_project.html', {
                 'form': form,
@@ -255,7 +256,7 @@ def edit_project(request, project_id):
                 'project': project,
                 'suggested_employees': suggested_employees,
                 'skill_requirements': skill_requirements,
-                'assigned_employees': assigned_employees,
+                'assigned_employees': {}
             })
 
         # Obsługa zapisu zmian w projekcie
@@ -298,16 +299,40 @@ def edit_project(request, project_id):
             'skills': skills,
             'project': project,
             'skill_requirements': skill_requirements,
-            'assigned_employees': assigned_employees,
+            'assigned_employees': {},
+            'suggested_employees': [],
             'errors': form.errors,
         })
 
-    # Obsługa żądania GET
-    form = ProjectForm(instance=project, current_project=project)
+    else:
+        form = ProjectForm(instance=project, current_project=project)
+        # Pobierz aktualne wymagania
+        skill_requirements = {
+            req.skill.id: req.required_count 
+            for req in project.skill_requirements.all()
+        }
+        # Pobierz przypisanych pracowników
+        assigned_employees = {
+            skill.id: [
+                {
+                    'id': assignment.employee.id,
+                    'first_name': assignment.employee.user.first_name,
+                    'last_name': assignment.employee.user.last_name,
+                    'email': assignment.employee.user.email
+                }
+                for assignment in EmployeeProjectAssignment.objects.filter(
+                    project=project,
+                    skill=skill
+                )
+            ]
+            for skill in skills
+        }
+
     return render(request, 'projects/edit_project.html', {
         'form': form,
         'skills': skills,
         'project': project,
         'skill_requirements': skill_requirements,
         'assigned_employees': assigned_employees,
+        'suggested_employees': [],
     })

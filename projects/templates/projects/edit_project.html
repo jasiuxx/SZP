@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-
-{% load projects_filters %}
+{% load project_tags %}
 
 {% block content %}
 <h2>Edytuj projekt</h2>
@@ -77,21 +76,24 @@
                 </td>
                 <td>
                     <select name="assign_employee_{{ skill.id }}" multiple class="form-control">
-                        <!-- Aktualnie przypisani pracownicy -->
-                        {% for employee in assigned_employees|get_item:skill.id %}
-                            <option value="{{ employee.id }}" selected>
-                                {{ employee.user.first_name }} {{ employee.user.last_name }}
-                            </option>
-                        {% endfor %}
-
-                        <!-- Sugerowani pracownicy -->
-                        {% for employee in suggested_employees %}
-                        {% if employee.skill == skill.name %}
-                        <option value="{{ employee.employee_id }}">
-                            {{ employee.first_name }} {{ employee.last_name }}
-                        </option>
+                        {% if suggested_employees %}
+                            {% for employee in suggested_employees %}
+                                {% if employee.skill == skill.name %}
+                                    <option value="{{ employee.employee_id }}" {% if employee.selected %}selected{% endif %}>
+                                        {{ employee.first_name }} {{ employee.last_name }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                            {% if not suggested_employees|has_skill:skill.name and skill_requirements|get_item:skill.id > 0 %}
+                                <option disabled>brak</option>
+                            {% endif %}
+                        {% else %}
+                            {% for employee in assigned_employees|get_item:skill.id %}
+                                <option value="{{ employee.id }}" selected>
+                                    {{ employee.first_name }} {{ employee.last_name }}
+                                </option>
+                            {% endfor %}
                         {% endif %}
-                        {% endfor %}
                     </select>
                 </td>
             </tr>
