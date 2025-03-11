@@ -20,13 +20,8 @@ class ProjectForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         # Wyciągnij current_project, jeśli jest przekazany
-        current_project = kwargs.pop('current_project', None)
-
-        # Wywołaj oryginalny konstruktor
+        self.current_project = kwargs.pop('current_project', None)
         super().__init__(*args, **kwargs)
-
-        # Dodaj atrybut instancji, jeśli current_project został przekazany
-        self.current_project = current_project
 
         # Reszta oryginalnej logiki
         for skill in Skill.objects.all():
@@ -40,30 +35,14 @@ class ProjectForm(forms.ModelForm):
 
     def clean_title(self):
         title = self.cleaned_data.get('title')
-
-        # Sprawdź, czy tytuł jest już zajęty, z wyłączeniem bieżącego projektu
-        existing_projects = Project.objects.filter(title=title)
-
-        if self.current_project:
-            existing_projects = existing_projects.exclude(pk=self.current_project.pk)
-
-        if existing_projects.exists():
+        if Project.objects.filter(title=title).exclude(id=self.current_project.id if self.current_project else None).exists():
             raise ValidationError('Projekt o takim tytule już istnieje.')
-
         return title
 
     def clean_code(self):
         code = self.cleaned_data.get('code')
-
-        # Sprawdź, czy kod jest już zajęty, z wyłączeniem bieżącego projektu
-        existing_projects = Project.objects.filter(code=code)
-
-        if self.current_project:
-            existing_projects = existing_projects.exclude(pk=self.current_project.pk)
-
-        if existing_projects.exists():
+        if Project.objects.filter(code=code).exclude(id=self.current_project.id if self.current_project else None).exists():
             raise ValidationError('Projekt o takim kodzie już istnieje.')
-
         return code
 
 
@@ -86,3 +65,12 @@ class ProjectSkillRequirementForm(forms.Form):
         super().__init__(*args, **kwargs)
         if skill:
             self.fields['skill'].initial = skill
+
+class TestAlgorithmForm(forms.Form):
+    """
+    Formularz do testowania algorytmu sugerowania pracowników.
+    Pola formularza są generowane dynamicznie na podstawie dostępnych umiejętności.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pola są dodawane dynamicznie w widoku

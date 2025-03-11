@@ -1,84 +1,92 @@
 {% extends "base.html" %}
+{% load projects_filters %}
 
 {% block content %}
-<div class="container">
-    <div class="row mb-4">
-        <div class="col">
-            <h2>Twoje projekty</h2>
-        </div>
-        <div class="col text-end">
-            <a href="{% url 'create_project' %}" class="btn btn-success">
-                <i class="fas fa-plus"></i> Utwórz nowy projekt
-            </a>
-        </div>
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h1 class="display-5 fw-bold">Twoje projekty</h1>
+        <p class="text-muted">Zarządzaj swoimi projektami i zespołami</p>
     </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{% url 'create_project' %}" class="btn btn-success btn-lg">
+            <i class="fas fa-plus-circle me-2"></i>Utwórz nowy projekt
+        </a>
+    </div>
+</div>
 
-    {% if projects %}
-        <div class="row">
-            {% for project in projects %}
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">{{ project.title }}</h5>
+{% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if projects %}
+    <div class="row">
+        {% for project in projects %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{{ project.title }}</h5>
+                        <span class="badge bg-secondary">{{ project.code }}</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Opis:</strong>
+                            <p>{{ project.description|truncatechars:150 }}</p>
                         </div>
-                        <div class="card-body">
-                            <p><strong>Kod projektu:</strong> {{ project.code }}</p>
-                            <p><strong>Opis:</strong> {{ project.description }}</p>
-
-                            <h6>Wymagane umiejętności:</h6>
-                            <ul class="list-group list-group-flush mb-3">
-                                {% for requirement in project.skill_requirements.all %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        {{ requirement.skill.name }}
-                                        <span class="badge bg-primary rounded-pill">
-                                            {{ requirement.required_count }} specjalistów
-                                        </span>
-                                    </li>
-                                {% empty %}
-                                    <li class="list-group-item">Brak wymagań</li>
+                        
+                        <div class="mb-3">
+                            <strong>Wymagane umiejętności:</strong>
+                            <div class="mt-2">
+                                {% for req in project.skill_requirements.all %}
+                                    <span class="skill-badge me-2 mb-2 {{ req.skill.name|skill_color }}">
+                                        {{ req.skill.name }} ({{ req.required_count }})
+                                    </span>
                                 {% endfor %}
-                            </ul>
-
-                            <h6>Przypisani pracownicy:</h6>
-                            <ul class="list-group list-group-flush">
-                                {% for employee in project.employees.all %}
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        {{ employee.user.first_name }} {{ employee.user.last_name }}
-                                        {% for assignment in employee.employeeprojectassignment_set.all %}
-                                            {% if assignment.project.id == project.id %}
-                                                <span class="badge bg-secondary rounded-pill">
-                                                    {{ assignment.skill.name }}
-                                                </span>
-                                            {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Przypisani pracownicy:</strong>
+                            <div class="mt-2">
+                                {% if project.employees.all %}
+                                    <ul class="list-group">
+                                        {% for assignment in project.employeeprojectassignment_set.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                {{ assignment.employee.user.first_name }} {{ assignment.employee.user.last_name }}
+                                                <span class="skill-badge {{ assignment.skill.name|skill_color }}">{{ assignment.skill.name }}</span>
+                                            </li>
                                         {% endfor %}
-                                    </li>
-                                {% empty %}
-                                    <li class="list-group-item">Brak przypisanych pracowników</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        <div class="card-footer">
-                            <div class="d-flex justify-content-between">
-                                <a href="{% url 'edit_project' project.id %}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i> Edytuj
-                                </a>
-                                <form method="post" action="{% url 'delete_project' project.id %}" class="d-inline" onsubmit="return confirm('Czy na pewno chcesz usunąć ten projekt?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash"></i> Usuń
-                                    </button>
-                                </form>
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted">Brak przypisanych pracowników</p>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
+                    <div class="card-footer bg-transparent d-flex justify-content-end">
+                        <a href="{% url 'edit_project' project.id %}" class="btn btn-primary me-2">
+                            <i class="fas fa-edit me-1"></i>Edytuj
+                        </a>
+                        <form method="post" action="{% url 'delete_project' project.id %}" onsubmit="return confirm('Czy na pewno chcesz usunąć ten projekt?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-1"></i>Usuń
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="alert alert-info text-center" role="alert">
-            Nie masz jeszcze żadnych projektów.
-            <a href="{% url 'create_project' %}" class="alert-link">Utwórz pierwszy projekt</a>
-        </div>
-    {% endif %}
-</div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Brak projektów</h4>
+        <p>Nie masz jeszcze żadnych projektów. Kliknij przycisk "Utwórz nowy projekt", aby rozpocząć.</p>
+    </div>
+{% endif %}
 {% endblock %}

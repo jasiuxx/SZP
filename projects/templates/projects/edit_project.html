@@ -1,109 +1,157 @@
 {% extends "base.html" %}
 {% load project_tags %}
+{% load widget_tweaks %}
 
 {% block content %}
-<h2>Edytuj projekt</h2>
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 fw-bold">Edytuj projekt</h1>
+        <p class="text-muted">Zaktualizuj informacje o projekcie i przypisanych pracownikach</p>
+    </div>
+</div>
 
-<!-- Globalne błędy formularza -->
-{% if form.errors %}
-    <div class="alert alert-danger">
-        {% for field, errors in form.errors.items %}
-            {% for error in errors %}
-                <p>{{ error }}</p>
-            {% endfor %}
+<!-- Wyświetlanie komunikatów -->
+{% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-{{ message.tags }}{% endif %}">
+                <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} me-2"></i>
+                {{ message }}
+            </div>
         {% endfor %}
     </div>
 {% endif %}
 
-<form method="post">
-    {% csrf_token %}
-    <div class="mb-3">
-        {{ form.title.label_tag }}
-        {{ form.title }}
-        {% if form.title.errors %}
-            <div class="text-danger">
-                {% for error in form.title.errors %}
-                    {{ error }}
+<!-- Globalne błędy formularza -->
+{% if form.errors %}
+    <div class="alert alert-danger mb-4">
+        <h5 class="alert-heading"><i class="fas fa-exclamation-circle me-2"></i>Formularz zawiera błędy</h5>
+        <ul class="mb-0">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li>{{ field }}: {{ error }}</li>
                 {% endfor %}
-            </div>
-        {% endif %}
-    </div>
-    <div class="mb-3">
-        {{ form.code.label_tag }}
-        {{ form.code }}
-        {% if form.code.errors %}
-            <div class="text-danger">
-                {% for error in form.code.errors %}
-                    {{ error }}
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
-    <div class="mb-3">
-        {{ form.description.label_tag }}
-        {{ form.description }}
-        {% if form.description.errors %}
-            <div class="text-danger">
-                {% for error in form.description.errors %}
-                    {{ error }}
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
-
-    <h4>Wymagane umiejętności</h4>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Umiejętność</th>
-                <th>Liczba specjalistów</th>
-                <th>Wybór pracowników</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for skill in skills %}
-            <tr>
-                <td>{{ skill.name }}</td>
-                <td>
-                    <input
-                        type="number"
-                        value="{{ skill_requirements|get_item:skill.id|default_if_none:0 }}"
-                        name="required_count_{{ skill.id }}"
-                        min="0"
-                        class="form-control"
-                        placeholder="Liczba specjalistów"
-                    >
-                </td>
-                <td>
-                    <select name="assign_employee_{{ skill.id }}" multiple class="form-control">
-                        {% if suggested_employees %}
-                            {% for employee in suggested_employees %}
-                                {% if employee.skill == skill.name %}
-                                    <option value="{{ employee.employee_id }}" {% if employee.selected %}selected{% endif %}>
-                                        {{ employee.first_name }} {{ employee.last_name }}
-                                    </option>
-                                {% endif %}
-                            {% endfor %}
-                            {% if not suggested_employees|has_skill:skill.name and skill_requirements|get_item:skill.id > 0 %}
-                                <option disabled>brak</option>
-                            {% endif %}
-                        {% else %}
-                            {% for employee in assigned_employees|get_item:skill.id %}
-                                <option value="{{ employee.id }}" selected>
-                                    {{ employee.first_name }} {{ employee.last_name }}
-                                </option>
-                            {% endfor %}
-                        {% endif %}
-                    </select>
-                </td>
-            </tr>
             {% endfor %}
-        </tbody>
-    </table>
+        </ul>
+    </div>
+{% endif %}
 
-    <button type="submit" name="suggest_employees" class="btn btn-primary">Sugeruj pracowników</button>
-    <button type="submit" class="btn btn-success">Zapisz projekt</button>
-</form>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">{{ form.title.label }}</label>
+                        {% render_field form.title class="form-control" placeholder="Wprowadź tytuł projektu" %}
+                        {% if form.title.errors %}
+                            <div class="text-danger">
+                                {% for error in form.title.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.code.id_for_label }}" class="form-label fw-bold">{{ form.code.label }}</label>
+                        {% render_field form.code class="form-control" placeholder="Wprowadź unikalny kod projektu" %}
+                        {% if form.code.errors %}
+                            <div class="text-danger">
+                                {% for error in form.code.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">{{ form.description.label }}</label>
+                {% render_field form.description class="form-control" rows="4" placeholder="Wprowadź szczegółowy opis projektu" %}
+                {% if form.description.errors %}
+                    <div class="text-danger">
+                        {% for error in form.description.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
 
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Wymagane umiejętności</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Określ, ile osób z daną umiejętnością potrzebujesz w projekcie</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Umiejętność</th>
+                                    <th>Liczba specjalistów</th>
+                                    <th>Wybór pracowników</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for skill in skills %}
+                                <tr>
+                                    <td class="align-middle">
+                                        <span class="fw-medium">{{ skill.name }}</span>
+                                    </td>
+                                    <td style="width: 200px;">
+                                        <input
+                                            type="number"
+                                            value="{{ skill_requirements|get_item:skill.id|default_if_none:0 }}"
+                                            name="required_count_{{ skill.id }}"
+                                            min="0"
+                                            class="form-control"
+                                            placeholder="Liczba specjalistów"
+                                        >
+                                    </td>
+                                    
+                                    <td>
+                                        <select name="assign_employee_{{ skill.id }}" multiple class="form-select" style="min-height: 100px;">
+                                            {% if suggested_employees %}
+                                                {% for employee in suggested_employees %}
+                                                    {% if employee.skill == skill.name %}
+                                                        <option value="{{ employee.employee_id }}" {% if employee.selected %}selected{% endif %}>
+                                                            {{ employee.first_name }} {{ employee.last_name }}
+                                                        </option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% if not suggested_employees|has_skill:skill.name and skill_requirements|get_item:skill.id > 0 %}
+                                                    <option disabled>brak</option>
+                                                {% endif %}
+                                            {% else %}
+                                                {% for employee in assigned_employees|get_item:skill.id %}
+                                                    <option value="{{ employee.id }}" selected>
+                                                        {{ employee.first_name }} {{ employee.last_name }}
+                                                    </option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
+            <div class="d-flex justify-content-between">
+                <button type="submit" name="suggest_employees" class="btn btn-primary">
+                    <i class="fas fa-user-check me-2"></i>Sugeruj pracowników
+                </button>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>Zapisz projekt
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
