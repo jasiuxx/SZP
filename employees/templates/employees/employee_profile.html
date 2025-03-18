@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+{% load employee_tags %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Lewa kolumna - informacje podstawowe -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-circle me-2"></i>Profil pracownika</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                    <h3>{{ employee.user.first_name }} {{ employee.user.last_name }}</h3>
+                    <p class="text-muted">
+                        <i class="fas fa-envelope me-2"></i>{{ employee.user.email }}
+                    </p>
+                    {% if employee.phone_number %}
+                        <p class="text-muted">
+                            <i class="fas fa-phone me-2"></i>{{ employee.phone_number }}
+                        </p>
+                    {% endif %}
+                    <p class="text-muted">
+                        <i class="fas fa-calendar-alt me-2"></i>Dołączył: {{ employee.user.date_joined|date:"d.m.Y" }}
+                    </p>
+                    {% if employee.department %}
+                        <p class="text-muted">
+                            <i class="fas fa-building me-2"></i>Dział: {{ employee.department }}
+                        </p>
+                    {% endif %}
+                    {% if employee.position %}
+                        <p class="text-muted">
+                            <i class="fas fa-briefcase me-2"></i>Stanowisko: {{ employee.position }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Sekcja z rolami Belbina (jeśli dostępne) -->
+            {% if employee.belbin_test_result %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-users-cog me-2"></i>Role zespołowe (Belbin)</h5>
+                </div>
+                <div class="card-body">
+                    {% with roles=employee.belbin_test_result.roles_by_level %}
+                    <h6>Role Belbina</h6>
+                    <ul class="list-group mb-3">
+                        {% for role in roles|get_item:"bardzo wysoki" %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="role-badge">{{ role_names|get_item:role }}</span>
+                                <span class="badge bg-primary rounded-pill">Bardzo wysoki</span>
+                            </li>
+                        {% endfor %}
+                        
+                        {% for role in roles|get_item:"wysoki" %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span class="role-badge">{{ role_names|get_item:role }}</span>
+                                <span class="badge bg-success rounded-pill">Wysoki</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    {% endwith %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Prawa kolumna - umiejętności i projekty -->
+        <div class="col-md-8">
+            <!-- Sekcja z umiejętnościami -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-code me-2"></i>Umiejętności</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for skill in employee.employee_skills.all %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            {% if skill.skill.logo %}
+                                                <img src="{{ skill.skill.logo.url }}" width="24" height="24" alt="{{ skill.skill.name }}" class="me-2" />
+                                            {% endif %}
+                                            {{ skill.skill.name }}
+                                        </h5>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                {% if skill.proficiency_level == '3' %}
+                                                    <span class="badge bg-danger">Senior</span>
+                                                {% elif skill.proficiency_level == '2' %}
+                                                    <span class="badge bg-warning">Mid</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">Junior</span>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="progress" style="width: 100px;">
+                                                    {% if skill.proficiency_level == '3' %}
+                                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    {% elif skill.proficiency_level == '2' %}
+                                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 66%" aria-valuenow="66" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    {% else %}
+                                                        <div class="progress-bar bg-info" role="progressbar" style="width: 33%" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if skill.description %}
+                                            <p class="card-text mt-2">{{ skill.description }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="col-12">
+                                <p class="text-muted">Brak zdefiniowanych umiejętności</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sekcja z doświadczeniem -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-briefcase me-2"></i>Doświadczenie</h4>
+                    {% with employee_id=user|get_employee_id %}
+                        {% if employee_id and employee_id == employee.id %}
+                            <a href="{% url 'add_experience' %}" class="btn btn-light">
+                                <i class="fas fa-plus me-1"></i> Dodaj doświadczenie
+                            </a>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                <div class="card-body">
+                    {% for experience in employee.experiences.all %}
+                        <div class="experience-item mb-4">
+                            <div class="d-flex justify-content-between">
+                                <h5>{{ experience.title }}</h5>
+                                <span class="text-muted">
+                                    {{ experience.date_started|date:"m.Y" }} - 
+                                    {% if experience.date_ended %}
+                                        {{ experience.date_ended|date:"m.Y" }}
+                                    {% else %}
+                                        obecnie
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <p>{{ experience.description|linebreaks }}</p>
+                            
+                            {% if experience.image %}
+                                <div class="mt-2 mb-2">
+                                    <img src="{{ experience.image.url }}" alt="Zdjęcie z projektu" class="img-fluid rounded" style="max-height: 200px;">
+                                </div>
+                            {% endif %}
+                            
+                            {% if experience.project_file %}
+                                <div class="mt-2">
+                                    <a href="{{ experience.project_file.url }}" class="btn btn-sm btn-outline-primary" download>
+                                        <i class="fas fa-download me-1"></i> Pobierz plik projektu
+                                    </a>
+                                </div>
+                            {% endif %}
+                            
+                            {% with employee_id=user|get_employee_id %}
+                                {% if employee_id and employee_id == employee.id %}
+                                    <div class="mt-2">
+                                        <a href="{% url 'edit_experience' experience.id %}" class="btn btn-sm btn-outline-secondary me-1">
+                                            <i class="fas fa-edit"></i> Edytuj
+                                        </a>
+                                        <a href="{% url 'delete_experience' experience.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i> Usuń
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        
+                        {% if not forloop.last %}
+                            <hr>
+                        {% endif %}
+                    {% empty %}
+                        <p class="text-muted">Brak dodanego doświadczenia</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Sekcja z projektami -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-project-diagram me-2"></i>Projekty</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nazwa projektu</th>
+                                    <th>Kod</th>
+                                    <th>Rola</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in employee.employeeprojectassignment_set.all %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'edit_project' assignment.project.id %}">
+                                                {{ assignment.project.title }}
+                                            </a>
+                                        </td>
+                                        <td>{{ assignment.project.code }}</td>
+                                        <td>
+                                            <span class="badge {{ assignment.skill.name|skill_color }}">
+                                                {% if assignment.skill.logo %}
+                                                    <img src="{{ assignment.skill.logo.url }}" width="16" height="16" alt="{{ assignment.skill.name }}" />
+                                                {% endif %}
+                                                {{ assignment.skill.name }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if assignment.project.status == 'active' %}
+                                                <span class="badge bg-success">{{ assignment.project.get_status_display }}</span>
+                                            {% elif assignment.project.status == 'completed' %}
+                                                <span class="badge bg-secondary">{{ assignment.project.get_status_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-primary">{{ assignment.project.get_status_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">Pracownik nie jest przypisany do żadnego projektu</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p>Test koloru: <span class="{{ 'Python'|skill_color }}">Python</span></p>
+{% endblock %}

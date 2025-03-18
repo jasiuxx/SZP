@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Employee, Skill
+from .models import Employee, Skill, EmployeeSkill, Experience
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class EditSkillsForm(forms.ModelForm):
@@ -13,6 +13,27 @@ class EditSkillsForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = ['skills']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(f"DEBUG - EditSkillsForm.__init__ - instance: {self.instance}")
+        
+        for skill in self.fields['skills'].queryset:
+            # Ustawienie domyślnej wartości na podstawie istniejącego poziomu zaawansowania
+            proficiency_level = EmployeeSkill.objects.filter(employee=self.instance, skill=skill).first()
+            print(f"DEBUG - EditSkillsForm.__init__ - skill: {skill.id}, proficiency_level: {proficiency_level}")
+            
+            self.fields[f'proficiency_level_{skill.id}'] = forms.ChoiceField(
+                choices=[
+                    ('', 'Wybierz poziom'),
+                    ('1', 'Junior'),
+                    ('2', 'Mid'),
+                    ('3', 'Senior')
+                ],
+                required=False,
+                initial=proficiency_level.proficiency_level if proficiency_level else ''
+            )
+            print(f"DEBUG - EditSkillsForm.__init__ - field: proficiency_level_{skill.id}, initial: {self.fields[f'proficiency_level_{skill.id}'].initial}")
 
 
 class GroupedTableForm(forms.Form):
@@ -73,3 +94,21 @@ class GroupedTableForm(forms.Form):
                 )
 
         return cleaned_data
+
+class ExperienceForm(forms.ModelForm):
+    class Meta:
+        model = Experience
+        fields = ['title', 'description', 'date_started', 'date_ended', 'image', 'project_file']
+        widgets = {
+            'date_started': forms.DateInput(attrs={'type': 'date'}),
+            'date_ended': forms.DateInput(attrs={'type': 'date', 'required': False}),
+            'description': forms.Textarea(attrs={'rows': 5}),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+        
+        # Pole data zakończenia nie jest wymagane
+        self.fields['date_ended'].required = False

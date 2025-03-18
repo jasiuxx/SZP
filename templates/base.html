@@ -1,3 +1,4 @@
+{% load employee_tags %}
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -180,6 +181,22 @@
                                     <i class="fas fa-plus-circle me-1"></i> Utwórz Projekt
                                 </a>
                             </li>
+                        {% elif user.is_employee %}
+                            {% with employee_id=user|get_employee_id %}
+                                {% if employee_id %}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{% url 'my_profile' %}">
+                                            <i class="fas fa-id-card me-1"></i> Mój Profil Pracownika
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{% url 'profile' %}">
+                                            <i class="fas fa-user-circle me-1"></i> Profil
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endwith %}
                         {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'profile' %}">

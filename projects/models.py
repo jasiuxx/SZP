@@ -1,6 +1,7 @@
 from django.db import models
 from employees.models import Skill
 from employers.models import Employer
+from django.contrib.auth.models import User
 
 from employees.models import Employee  # Dodaj import do modelu Employee
 
@@ -34,3 +35,13 @@ class EmployeeProjectAssignment(models.Model):
 
     def __str__(self):
         return f"{self.employee.user.first_name} {self.employee.user.last_name} - {self.skill.name}"
+
+
+class ProjectMessage(models.Model):
+    project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='messages')
+    user = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Message from {self.user.user.username} in {self.project.title}'

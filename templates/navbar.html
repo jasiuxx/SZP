@@ -1,0 +1,33 @@
+{% if user.is_authenticated %}
+    {% if user.is_employee %}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                Moje konto
+            </a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'profile' %}">Profil podstawowy</a></li>
+                <li><a class="dropdown-item" href="{% url 'employee_profile' user.profile.id %}">Pełny profil pracownika</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'logout' %}">Wyloguj</a></li>
+            </ul>
+        </li>
+    {% elif user.is_employer %}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                Moje konto
+            </a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'profile' %}">Profil</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'logout' %}">Wyloguj</a></li>
+            </ul>
+        </li>
+    {% endif %}
+{% else %}
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'login' %}">Logowanie</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'register' %}">Rejestracja</a>
+    </li>
+{% endif %} 

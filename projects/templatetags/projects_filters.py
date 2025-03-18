@@ -1,5 +1,6 @@
 from django import template
 import hashlib
+from employees.models import EmployeeSkill
 
 register = template.Library()
 
@@ -7,6 +8,24 @@ register = template.Library()
 def get_item(dictionary, key):
     """Filtr do pobierania elementu ze słownika na podstawie klucza."""
     return dictionary.get(key)
+
+@register.filter
+def get_proficiency_level(employee, skill):
+    """
+    Zwraca poziom zaawansowania pracownika dla danej umiejętności.
+    """
+    try:
+        employee_skill = EmployeeSkill.objects.get(employee=employee, skill=skill)
+        if employee_skill.proficiency_level == '1':
+            return "Junior"
+        elif employee_skill.proficiency_level == '2':
+            return "Mid"
+        elif employee_skill.proficiency_level == '3':
+            return "Senior"
+        else:
+            return employee_skill.proficiency_level
+    except EmployeeSkill.DoesNotExist:
+        return ""
 
 @register.filter
 def skill_color(skill_name):
@@ -42,6 +61,9 @@ def skill_color(skill_name):
         'bg-success text-danger',    # zielony z czerwonym tekstem
         'bg-dark text-danger',       # czarny z czerwonym tekstem
     ]
+
+    if skill_name.lower() == "java":
+        return 'bg-warning'
     
     # Bardziej zaawansowany algorytm przydzielania kolorów
     # Używamy kombinacji długości nazwy i funkcji skrótu, aby zwiększyć różnorodność

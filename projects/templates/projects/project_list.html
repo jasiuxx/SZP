@@ -1,7 +1,11 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% load projects_filters %}
 
+
 {% block content %}
+<link rel="stylesheet" href="{% static 'projects/css/styles.css' %}">
 <div class="row mb-4 align-items-center">
     <div class="col-md-8">
         <h1 class="display-5 fw-bold">Twoje projekty</h1>
@@ -44,6 +48,9 @@
                             <div class="mt-2">
                                 {% for req in project.skill_requirements.all %}
                                     <span class="skill-badge me-2 mb-2 {{ req.skill.name|skill_color }}">
+                                        {% if req.skill.logo %}
+                                            <img src="{{ req.skill.logo.url }}" width="20" height="20" alt="{{ req.skill.name }}" />
+                                        {% endif %}
                                         {{ req.skill.name }} ({{ req.required_count }})
                                     </span>
                                 {% endfor %}
@@ -57,8 +64,21 @@
                                     <ul class="list-group">
                                         {% for assignment in project.employeeprojectassignment_set.all %}
                                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                {{ assignment.employee.user.first_name }} {{ assignment.employee.user.last_name }}
-                                                <span class="skill-badge {{ assignment.skill.name|skill_color }}">{{ assignment.skill.name }}</span>
+                                                <a href="{% url 'employee_profile' assignment.employee.id %}" class="employee-name" data-id="{{ assignment.employee.id }}">
+                                                    <i class="fas fa-user-circle me-2"></i>
+                                                    {{ assignment.employee.user.first_name }} {{ assignment.employee.user.last_name }}
+                                                    {% with proficiency_level=assignment.employee|get_proficiency_level:assignment.skill %}
+                                                        {% if proficiency_level %}
+                                                            ({{ proficiency_level }})
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                </a>
+                                                <span class="skill-badge {{ assignment.skill.name|skill_color }}">
+                                                    {% if assignment.skill.logo %}
+                                                        <img src="{{ assignment.skill.logo.url }}" width="20" height="20" alt="{{ assignment.skill.name }}" />
+                                                    {% endif %}
+                                                    {{ assignment.skill.name }}
+                                                </span>
                                             </li>
                                         {% endfor %}
                                     </ul>

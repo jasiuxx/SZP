@@ -1,10 +1,42 @@
 {% extends "base.html" %}
+{% load static %}
+{% load employee_tags %}
 
 {% block title %}
     Profil Pracownika
 {% endblock %}
 
 {% block content %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Profil użytkownika</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Imię:</strong> {{ first_name }}</p>
+                        <p><strong>Nazwisko:</strong> {{ last_name }}</p>
+                        <p><strong>Email:</strong> {{ email }}</p>
+                        
+                        <!-- Link do rozszerzonego profilu pracownika -->
+                        <div class="mt-3">
+                            {% if employee and employee.id %}
+                                <a href="{% url 'my_profile' %}" class="btn btn-primary">
+                                    <i class="fas fa-user-circle me-1"></i> Przejdź do pełnego profilu pracownika
+                                </a>
+                                <p class="mt-2 text-muted small">
+                                    Pełny profil pracownika zawiera twoje umiejętności, role Belbina, projekty oraz pozwala na zarządzanie doświadczeniem zawodowym.
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
     <div class="row justify-content-center">
         <div class="col-md-8">
             <h2 class="text-center">Twój profil</h2>
@@ -39,7 +71,32 @@
                         <h2 class="text-center">Edytuj umiejętności</h2>
                         <form method="post" class="mt-4 border p-4 shadow-sm rounded bg-light">
                             {% csrf_token %}
-                            {{ form.as_p }}
+                            <h3>Umiejętności:</h3>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Umiejętność</th>
+                                        <th>Poziom zaawansowania</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for skill in form.skills %}
+                                        <tr>
+                                            <td>
+                                                {{ skill.tag }} {{ skill.choice_label }}
+                                            </td>
+                                            <td>
+                                                <select name="proficiency_level_{{ skill.data.value }}" class="form-select">
+                                                    <option value="">Wybierz poziom</option>
+                                                    <option value="1" {% if skill_levels|get_item:skill.data.value == "1" %}selected{% endif %}>Junior</option>
+                                                    <option value="2" {% if skill_levels|get_item:skill.data.value == "2" %}selected{% endif %}>Mid</option>
+                                                    <option value="3" {% if skill_levels|get_item:skill.data.value == "3" %}selected{% endif %}>Senior</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
                             </div>

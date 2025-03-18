@@ -1,9 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from employees.models import Employee, BelbinScore
-from .forms import GroupedTableForm
+from employees.models import Employee, BelbinScore, Experience
+from .forms import GroupedTableForm, ExperienceForm
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 
 
 class EmployeeBelbinTest(View):
@@ -259,5 +261,117 @@ def belbin_results_view(request):
     return render(request, 'employees/belbin_results.html', {
         'results': results,
         'scores': scores,
+    })
+
+
+@login_required
+def employee_profile(request, employee_id):
+    """Widok profilu pracownika - widoczny dla pracodawców i innych pracowników"""
+    employee = get_object_or_404(Employee, id=employee_id)
+    return render(request, 'employees/employee_profile.html', {'employee': employee})
+
+@login_required
+def my_profile(request):
+    """Widok własnego profilu pracownika - widoczny tylko dla zalogowanego pracownika"""
+    # Upewnij się, że użytkownik jest powiązany z profilem pracownika
+    try:
+        employee = request.user.employee
+    except AttributeError:
+        try:
+            employee = Employee.objects.get(user=request.user)
+            request.user.employee = employee
+        except Employee.DoesNotExist:
+            messages.error(request, 'Nie znaleziono profilu pracownika.')
+            return redirect('profile')
+    
+    return render(request, 'employees/employee_profile_my.html', {'employee': employee})
+
+@login_required
+def add_experience(request):
+    # Upewnij się, że użytkownik jest powiązany z profilem pracownika
+    try:
+        employee = request.user.employee
+    except AttributeError:
+        try:
+            employee = Employee.objects.get(user=request.user)
+            request.user.employee = employee
+        except Employee.DoesNotExist:
+            messages.error(request, 'Nie znaleziono profilu pracownika.')
+            return redirect('profile')
+            
+    if request.method == 'POST':
+        form = ExperienceForm(request.POST, request.FILES)
+        if form.is_valid():
+            experience = form.save(commit=False)
+            experience.employee = employee
+            experience.save()
+            messages.success(request, 'Doświadczenie zostało dodane pomyślnie.')
+            return redirect('employee_profile', employee_id=employee.id)
+    else:
+        form = ExperienceForm()
+    
+    return render(request, 'employees/experience_form.html', {
+        'form': form,
+    })
+
+@login_required
+def edit_experience(request, experience_id):
+    # Upewnij się, że użytkownik jest powiązany z profilem pracownika
+    try:
+        employee = request.user.employee
+    except AttributeError:
+        try:
+            employee = Employee.objects.get(user=request.user)
+            request.user.employee = employee
+        except Employee.DoesNotExist:
+            messages.error(request, 'Nie znaleziono profilu pracownika.')
+            return redirect('profile')
+            
+    experience = get_object_or_404(Experience, id=experience_id)
+    
+    # Weryfikacja czy użytkownik ma uprawnienia do edycji
+    if experience.employee.id != employee.id:
+        raise PermissionDenied("Nie masz uprawnień do edycji tego doświadczenia.")
+    
+    if request.method == 'POST':
+        form = ExperienceForm(request.POST, request.FILES, instance=experience)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Doświadczenie zostało zaktualizowane pomyślnie.')
+            return redirect('employee_profile', employee_id=employee.id)
+    else:
+        form = ExperienceForm(instance=experience)
+    
+    return render(request, 'employees/experience_form.html', {
+        'form': form,
+        'experience': experience,
+    })
+
+@login_required
+def delete_experience(request, experience_id):
+    # Upewnij się, że użytkownik jest powiązany z profilem pracownika
+    try:
+        employee = request.user.employee
+    except AttributeError:
+        try:
+            employee = Employee.objects.get(user=request.user)
+            request.user.employee = employee
+        except Employee.DoesNotExist:
+            messages.error(request, 'Nie znaleziono profilu pracownika.')
+            return redirect('profile')
+            
+    experience = get_object_or_404(Experience, id=experience_id)
+    
+    # Weryfikacja czy użytkownik ma uprawnienia do usunięcia
+    if experience.employee.id != employee.id:
+        raise PermissionDenied("Nie masz uprawnień do usunięcia tego doświadczenia.")
+    
+    if request.method == 'POST':
+        experience.delete()
+        messages.success(request, 'Doświadczenie zostało usunięte pomyślnie.')
+        return redirect('employee_profile', employee_id=employee.id)
+    
+    return render(request, 'employees/delete_experience.html', {
+        'experience': experience,
     })
 

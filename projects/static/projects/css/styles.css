@@ -1,0 +1,65 @@
+.employee-name {
+    color: black; /* Normalny kolor tekstu */
+    cursor: default; /* Kursor domyślny */
+    transition: color 0.3s; /* Płynna zmiana koloru */
+    text-decoration: none !important; /* Usuń podkreślenie */
+}
+
+.employee-name:hover {
+    color: blue !important; /* Kolor po najechaniu */
+    text-decoration: underline; /* Podkreślenie po najechaniu */
+    cursor: pointer; /* Kursor wskazujący */
+}
+
+.message {
+    border-radius: 10px !important;  /* Zaokrąglenie rogów */
+    border: 1px solid #e0e0e0 !important;  /* Lekka ramka */
+    background-color: #f9f9f9 !important;  /* Tło wiadomości */
+    padding: 10px !important;  /* Padding wewnętrzny */
+    margin-bottom: 10px !important;  /* Odstęp między wiadomościami */
+}
+
+.message .card-title {
+    font-weight: bold !important; /* Pogrubienie nazwy użytkownika */
+}
+
+.message .card-text {
+    margin-bottom: 0.5rem !important; /* Odstęp między tekstem a datą */
+}
+
+.message .btn-danger {
+    margin-top: 0.5rem !important; /* Odstęp od tekstu */
+}
+
+.card {
+    border: 1px solid #e0e0e0 !important; /* Delikatna ramka */
+    border-radius: 5px !important; /* Zaokrąglone rogi */
+}
+
+.card-body {
+    background-color: #f9f9f9 !important; /* Jasne tło */
+}
+
+.btn-primary {
+    background-color: #007bff !important; /* Kolor przycisku */
+    border-color: #007bff !important; /* Kolor ramki przycisku */
+}
+
+.btn-danger {
+    background-color: #dc3545 !important; /* Kolor przycisku usuwania */
+    border-color: #dc3545 !important; /* Kolor ramki przycisku usuwania */
+}
+
+textarea {
+    border-radius: 10px; /* Zaokrąglenie rogów */
+    border: 1px solid #ced4da; /* Kolor ramki */
+    padding: 10px; /* Padding wewnętrzny */
+    width: 100%; /* Szerokość na 100% */
+    resize: none; /* Wyłączenie możliwości zmiany rozmiaru */
+}
+
+textarea:focus {
+    border-color: #80bdff; /* Kolor ramki przy focie */
+    outline: none; /* Usunięcie domyślnego konturu */
+}
+

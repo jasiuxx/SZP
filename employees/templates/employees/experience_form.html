@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {% if experience %}
+                            <i class="fas fa-edit me-2"></i>Edytuj doświadczenie
+                        {% else %}
+                            <i class="fas fa-plus me-2"></i>Dodaj nowe doświadczenie
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.title.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.date_started.id_for_label }}" class="form-label">{{ form.date_started.label }}</label>
+                                    {{ form.date_started }}
+                                    {% if form.date_started.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.date_started.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.date_ended.id_for_label }}" class="form-label">{{ form.date_ended.label }}</label>
+                                    {{ form.date_ended }}
+                                    <small class="form-text text-muted">Pozostaw puste dla bieżących doświadczeń</small>
+                                    {% if form.date_ended.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.date_ended.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.image.id_for_label }}" class="form-label">{{ form.image.label }}</label>
+                            {{ form.image }}
+                            <small class="form-text text-muted">Opcjonalne zdjęcie związane z doświadczeniem</small>
+                            {% if form.image.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.image.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if experience and experience.image %}
+                                <div class="mt-2">
+                                    <p>Aktualne zdjęcie:</p>
+                                    <img src="{{ experience.image.url }}" alt="Aktualne zdjęcie" class="img-thumbnail" style="max-height: 150px;">
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.project_file.id_for_label }}" class="form-label">{{ form.project_file.label }}</label>
+                            {{ form.project_file }}
+                            <small class="form-text text-muted">Opcjonalny plik projektu (PDF, DOC, itp.)</small>
+                            {% if form.project_file.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.project_file.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if experience and experience.project_file %}
+                                <div class="mt-2">
+                                    <p>Aktualny plik: <a href="{{ experience.project_file.url }}" target="_blank">{{ experience.project_file.name|slice:"20:" }}</a></p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            {% if request.user.employee and request.user.employee.id %}
+                                <a href="{% url 'employee_profile' request.user.employee.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i> Powrót do profilu pracownika
+                                </a>
+                            {% else %}
+                                <a href="{% url 'profile' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-1"></i> Powrót do profilu
+                                </a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Zapisz
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
