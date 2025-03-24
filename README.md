@@ -81,5 +81,6 @@ System opiera się na kwestionariuszu osobowości bazującym na teście Belbina.
 - Frontend: HTML/CSS z użyciem Bootstrap
 - Algorytmy: Python 
 
+Jest to na razie prototyp w trakcie rozwijania, więc w systemie mogą znaleźć się błędy.
 ---
 
